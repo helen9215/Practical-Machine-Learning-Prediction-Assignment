@@ -2,10 +2,10 @@
 title: "Fitness Prediction Assignment"
 output: html_document
 ---
-##Background
+## Background
 The goal of this report is to predict how well people do a particular activity. Data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants was used to build the prediction model.
 
-##Analysis
+## Analysis
 ### Data preprocessing
 First, load the caret and ggplot2 packages in R, and read the training and testing files.
 ```{R}
