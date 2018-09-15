@@ -1,0 +1,70 @@
+---
+title: "Fitness Prediction Assignment"
+output: html_document
+---
+##Background
+The goal of this report is to predict how well people do a particular activity. Data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants was used to build the prediction model.
+
+##Analysis
+### Data preprocessing
+First, load the caret and ggplot2 packages in R, and read the training and testing files.
+```{R}
+library(caret)
+library(ggplot2)
+
+finaltest <- read.csv(file = "./pml-testing.csv",header = TRUE)
+traindata <- read.csv(file = "./pml-training.csv",header = TRUE)
+```
+
+Then, clean up the data before building the model.It includes removing variables with all NA values, constant and near zero variables, and variables that have high correlations.
+```{R}
+na <- apply(is.na(traindata),2,sum)
+traindata2 <- traindata[,!na==19216]
+
+zerovar <- nearZeroVar(traindata2)
+newdata1 <- traindata2[,-zerovar]
+
+deCorr <-  cor(newdata1[,6:58])
+highCorr <- findCorrelation(deCorr,cutoff=0.9,exact = FALSE)
+newdata2 <-  newdata1[, -highCorr]
+newdata3 <- newdata2[,6:52]
+```
+
+### Cross validation
+Use caret package to split the data to the training and the testing set.
+```{R}
+set.seed(123456)
+inTrain <- createDataPartition(y=newdata3$classe,p=0.7,list=FALSE)
+training <- newdata3[inTrain,]
+testing <- newdata3[-inTrain,]
+```
+
+### Build the model
+Use gradient boosting method to build up the model.
+```{R}
+set.seed(123456)
+fitall<- train(classe~.,method="gbm",verbose=FALSE,na.action = na.omit,data=training)
+
+fitall
+summary(fitall)
+
+```
+
+As is shown, the final model's accuracy is 0.95 and kappa is 0.94. So the model fits quite well.Among these variables, roll_belt has the largest influence on the model.
+
+### Out of sample error
+Apply the model to the testing set, and compare the result from prediction and actual classe.
+```{R}
+predictionall <- predict(fitall,testing[,-52])
+confusionMatrix(predictionall, testing$classe)
+```
+
+As is shown, the prediction accuracy is 0.96, which is a bit higher than the in sample accuracy. In general, this model fits well.
+
+### Prediction
+Finally, predict the 20 different test cases.
+```{R}
+finalpredict <- predict(fitall,finaltest)
+finalpredict
+```
+
